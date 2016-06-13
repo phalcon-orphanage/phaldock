@@ -1,0 +1,161 @@
+version: '2'
+
+services:
+
+### PHP-FPM Container #######################################
+
+    php-fpm:
+        build:
+            context: ./php-fpm
+            dockerfile: Dockerfile-70
+        volumes_from:
+            - application
+        expose:
+            - "9000"
+        links:
+            - workspace
+
+### Phalcon Application Code Container ######################
+
+    application:
+        build: ./application
+        volumes:
+            - ../:/var/www/phalcon
+
+### Databases Data Container ################################
+
+    data:
+        build: ./data
+        volumes:
+            - /var/lib/mysql:/var/lib/mysql
+            - /var/lib/postgres:/var/lib/postgres
+            - /var/lib/mariadb:/var/lib/mariadb
+            - /var/lib/memcached:/var/lib/memcached
+            - /var/lib/redis:/data
+            - /var/lib/neo4j:/var/lib/neo4j/data
+            - /var/lib/mongo:/data/db
+
+### Nginx Server Container ##################################
+
+    nginx:
+        build: ./nginx
+        volumes_from:
+            - application
+        volumes:
+            - ./logs/nginx/:/var/log/nginx
+        ports:
+            - "80:80"
+            - "443:443"
+        links:
+            - php-fpm
+
+### MySQL Container #########################################
+
+    mysql:
+        build: ./mysql
+        volumes_from:
+            - data
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: phalcon
+            MYSQL_USER: phalcon
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: root
+
+### PostgreSQL Container ####################################
+
+    postgres:
+        build: ./postgres
+        volumes_from:
+            - data
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_DB: phalcon
+            POSTGRES_USER: phalcon
+            POSTGRES_PASSWORD: secret
+
+### MariaDB Container #######################################
+
+    mariadb:
+        build: ./mariadb
+        volumes_from:
+            - data
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: phalcon
+            MYSQL_USER: phalcon
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: root
+
+### Neo4j Container #########################################
+
+    neo4j:
+        build: ./neo4j
+        ports:
+            - "7474:7474"
+            - "1337:1337"
+        environment:
+            - NEO4J_AUTH=phalcon:secret
+        volumes_from:
+            - data
+
+### MongoDB Container #######################################
+
+    mongo:
+        build: ./mongo
+        ports:
+            - "27017:27017"
+        volumes_from:
+            - data
+
+### Redis Container #########################################
+
+    redis:
+        build: ./redis
+        volumes_from:
+            - data
+        ports:
+            - "6379:6379"
+
+### Memcached Container #####################################
+
+    memcached:
+        build: ./memcached
+        volumes_from:
+            - data
+        ports:
+            - "11211:11211"
+        links:
+            - php-fpm
+
+### Beanstalkd Container ####################################
+
+    beanstalkd:
+        build: ./beanstalkd
+        ports:
+            - "11300:11300"
+        privileged: true
+        links:
+            - php-fpm
+
+### Beanstalkd Console Container ############################
+
+    beanstalkd-console:
+        build: ./beanstalkd-console
+        ports:
+            - "2080:2080"
+        links:
+            - beanstalkd
+
+### Workspace Utilities Container ###########################
+
+    workspace:
+        build: ./workspace
+        volumes_from:
+            - application
+        tty: true
+
+### Add more Containers below ###############################
