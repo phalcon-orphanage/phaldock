@@ -1,9 +1,10 @@
-FROM php:7.0-fpm
+FROM phaldock/php:7.0.7-fpm
 
 ADD ./phalcon.ini /usr/local/etc/php/conf.d
 ADD ./phalcon.pool.conf /usr/local/etc/php-fpm.d/
 
 RUN apt-get update && apt-get install -y \
+    pkg-config \
     libpq-dev \
     libmemcached-dev \
     curl \
@@ -29,6 +30,10 @@ RUN pecl install xdebug \
 
 # Install mongodb driver
 RUN pecl install mongodb
+
+# Install phalcon 2.1.x
+ADD ./phalcon.sh phalcon.sh
+RUN bash phalcon.sh && rm phalcon.sh
 
 RUN usermod -u 1000 www-data
 

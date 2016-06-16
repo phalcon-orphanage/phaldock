@@ -26,6 +26,17 @@ RUN pecl install xdebug \
 # Install mongodb driver
 RUN pecl install mongodb
 
+# Install phalcon
+RUN curl -L -o /tmp/phalcon-v2.0.13.tar.gz "https://github.com/phalcon/cphalcon/archive/phalcon-v2.0.13.tar.gz" \
+    && mkdir -p /usr/src/php/ext/phalcon \
+    && mkdir -p /tmp/phalcon \
+    && tar -C /tmp/phalcon -zxvf /tmp/phalcon-v2.0.13.tar.gz --strip 1 \
+    && mv /tmp/phalcon/ext/* /usr/src/php/ext/phalcon \
+    && docker-php-ext-configure phalcon \
+    && docker-php-ext-install phalcon \
+    && rm /tmp/phalcon-v2.0.13.tar.gz \
+    && rm -rf /tmp/phalcon
+
 RUN usermod -u 1000 www-data
 
 WORKDIR /var/www/phalcon
