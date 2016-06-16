@@ -9,7 +9,7 @@ PhalDock helps you run your **Phalcon** App on **Docker** real quick.
 <a name="Intro"></a>
 ## Intro
 
-LaraDock strives to get closer to developers, providing flexible, powerful and simple tools. We would like a Phalcon
+PhalDock strives to get closer to developers, providing flexible, powerful and simple tools. We would like a Phalcon
 development process to be effortless and pleasant. It contains pre-packaged Docker Images that provides you a wonderful
 development environment without requiring you to install PHP, NGINX, MySQL, REDIS, and any other software on your local
 machine.
