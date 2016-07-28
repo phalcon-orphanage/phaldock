@@ -1,2 +1,135 @@
 FROM php:7.0-cli
 
+# Install "PHP Extentions", "libraries", "Software's"
+RUN apt-get update && \
+    apt-get install -y --force-yes \
+        pkg-config \
+        libcurl4-openssl-dev \
+        libedit-dev \
+        libssl-dev \
+        libxml2-dev \
+        xz-utils \
+        libsqlite3-dev \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libmcrypt-dev \
+        libpng12-dev \
+        libpq-dev \
+        sqlite3 \
+        git \
+        vim \
+        nano \
+    && apt-get clean
+
+RUN docker-php-ext-install -j$(nproc) curl iconv mcrypt json mbstring mysqli opcache pgsql pdo pdo_mysql pdo_pgsql \
+    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-install -j$(nproc) gd
+
+#####################################
+# Phalcon 3.0.0
+#####################################
+
+RUN git clone --depth=5 http://github.com/phalcon/cphalcon -b 3.0.x /tmp/phalcon \
+   && ( \
+   cd /tmp/phalcon/build \
+   && ./install ) \
+   && docker-php-ext-enable phalcon \
+   && rm -rf /tmp/phalcon
+
+#####################################
+# xDebug:
+#####################################
+
+# Check if xDebug needs to be installed
+ARG INSTALL_XDEBUG=false
+ENV INSTALL_XDEBUG ${INSTALL_XDEBUG}
+RUN if [ ${INSTALL_XDEBUG} = true ]; then \
+    # Load the xdebug extension only with phpunit commands
+    apt-get install -y --force-yes php7.0-xdebug && \
+    sed -i 's/^/;/g' /etc/php/7.0/cli/conf.d/20-xdebug.ini && \
+    echo "alias phpunit='php -dzend_extension=xdebug.so /var/www/phalcon/vendor/bin/phpunit'" >> ~/.bashrc \
+;fi
+
+#####################################
+# MongoDB:
+#####################################
+
+# Check if Mongo needs to be installed
+ARG INSTALL_MONGO=false
+ENV INSTALL_MONGO ${INSTALL_MONGO}
+RUN if [ ${INSTALL_MONGO} = true ]; then \
+    # Install the mongodb extension
+    pecl install mongodb && \
+    echo "extension=mongodb.so" >> /etc/php/7.0/cli/php.ini \
+;fi
+
+#####################################
+# Node / NVM:
+#####################################
+
+# Check if NVM needs to be installed
+ARG INSTALL_NODE=true
+ENV INSTALL_NODE ${INSTALL_NODE}
+RUN if [ ${INSTALL_NODE} = true ]; then \
+    # Install nvm (A Node Version Manager)
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.3/install.sh | bash \
+;fi
+# Again check if NVM needs to be installed
+# I had to split this condition link this because when I get it inside the above if statement is refuses to work!
+ENV if [ ${INSTALL_NODE} = true ]; then \
+    # Set the ENV
+    NVM_DIR=/home/laradock/.nvm \
+    # Install NodeJS with NVM
+    RUN . ~/.nvm/nvm.sh && \
+        nvm install stable && \
+        nvm use stable && \
+        nvm alias stable && \
+        npm install -g gulp bower \
+;fi
+
+# Wouldn't execute when added to the RUN statement in the above block
+# Source NVM when loading bash since ~/.profile isn't loaded on non-login shell
+RUN if [ ${INSTALL_NODE} = true ]; then \
+    echo "" >> ~/.bashrc && \
+    echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc && \
+    echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> ~/.bashrc \
+;fi
+
+#####################################
+# Non-Root User:
+#####################################
+
+# Add a non-root user to prevent files being created with root permissions on host machine.
+ARG PUID=1000
+ARG PGID=1000
+RUN groupadd -g $PGID phaldock && \
+    useradd -u $PUID -g phaldock -m phaldock
+
+#####################################
+# Composer:
+#####################################
+
+# Install composer and add its bin to the PATH.
+RUN curl -s http://getcomposer.org/installer | php && \
+    echo "export PATH=${PATH}:/var/www/phalcon/vendor/bin" >> ~/.bashrc && \
+    mv composer.phar /usr/local/bin/composer
+
+# Source the bash
+RUN . ~/.bashrc
+
+#
+#--------------------------------------------------------------------------
+# Final Touch
+#--------------------------------------------------------------------------
+#
+
+# Clean up
+USER root
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Now switch to our laradock user for the rest of user setup
+USER phaldock
+
+# Set default work directory
+WORKDIR /var/www/phalcon
