@@ -29,7 +29,7 @@ RUN docker-php-ext-install -j$(nproc) curl iconv mcrypt json mbstring mysqli opc
 # Phalcon 3.0.0
 #####################################
 
-RUN git clone --depth=5 http://github.com/phalcon/cphalcon -b 3.0.x /tmp/phalcon \
+RUN git clone --depth=1 http://github.com/phalcon/cphalcon -b master /tmp/phalcon \
    && ( \
    cd /tmp/phalcon/build \
    && ./install ) \
