@@ -2,3 +2,4 @@
 /cache/
 /config/development/
 /logs/
+.data
