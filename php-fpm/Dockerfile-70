@@ -31,6 +31,20 @@ RUN curl -L -o /tmp/memcached.tar.gz "https://github.com/php-memcached-dev/php-m
     && rm /tmp/memcached.tar.gz \
     && rm -r /tmp/memcached
 
+# Install Redis for PHP
+RUN curl -L -o /tmp/redis.tar.gz "https://github.com/phpredis/phpredis/archive/3.0.0.tar.gz" \
+    && mkdir -p /tmp/redis \
+    && tar -C /tmp/redis -zxvf /tmp/redis.tar.gz --strip 1 \
+    && cd /tmp/redis \
+    && ( \
+        phpize \
+        && ./configure \
+        && make \
+        && make install ) \
+    && docker-php-ext-enable redis \
+    && rm /tmp/redis.tar.gz \
+    && rm -r /tmp/redis
+
 # Install xdebug
 RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
