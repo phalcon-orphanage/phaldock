@@ -160,4 +160,15 @@ services:
             - application
         tty: true
 
+### RabbitMQ Container ######################################
+
+    rabbitmq:
+        build: ./rabbitmq
+
+### RabbitMQ Management Container ###########################
+    rabbitmq-management:
+        build: ./rabbitmq/management
+        ports:
+            - "8080:15672"
+
 ### Add more Containers below ###############################
