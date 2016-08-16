@@ -179,4 +179,9 @@ services:
         volumes_from:
             - data
 
+### Logstash Container #################################
+
+    logstash:
+        build: ./logstash
+
 ### Add more Containers below ###############################
