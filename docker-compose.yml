@@ -34,6 +34,7 @@ services:
             - ./.data/redis:/data
             - ./.data/neo4j:/var/lib/neo4j/data
             - ./.data/mongo:/data/db
+            - ./.data/elasticsearch:/usr/share/elasticsearch/data
 
 ### Nginx Server Container ##################################
 
@@ -170,5 +171,12 @@ services:
         build: ./rabbitmq/management
         ports:
             - "8080:15672"
+
+### Elasticsearch Container #################################
+
+    elasticsearch:
+        build: ./elasticsearch
+        volumes_from:
+            - data
 
 ### Add more Containers below ###############################
