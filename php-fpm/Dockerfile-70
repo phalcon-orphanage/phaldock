@@ -1,67 +1,101 @@
 FROM php:7.0-fpm
 
-ADD ./phalcon.ini /usr/local/etc/php/conf.d
-ADD ./phalcon.pool.conf /usr/local/etc/php-fpm.d/
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        git \
+        libmemcached-dev \
+        libz-dev \
+        libpq-dev \
+        libjpeg-dev \
+        libpng12-dev \
+        libfreetype6-dev \
+        libssl-dev \
+        libmcrypt-dev
 
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libpq-dev \
-    libmemcached-dev \
-    git \
-    curl \
-    --no-install-recommends \
-    && rm -r /var/lib/apt/lists/*
+# Install the PHP mcrypt extension
+RUN docker-php-ext-install mcrypt
 
-# Install extensions using the helper script provided by the base image
-RUN docker-php-ext-install \
-    pdo_mysql \
-    pdo_pgsql
+# Install the PHP pdo_mysql extension
+RUN docker-php-ext-install pdo_mysql
 
-# Install Memcached for php 7
-RUN curl -L -o /tmp/memcached.tar.gz "https://github.com/php-memcached-dev/php-memcached/archive/php7.tar.gz" \
-    && mkdir -p /tmp/memcached \
-    && tar -C /tmp/memcached -zxvf /tmp/memcached.tar.gz --strip 1 \
-    && cd /tmp/memcached \
+# Install the PHP pdo_pgsql extension
+RUN docker-php-ext-install pdo_pgsql
+
+# Install PHP GD library
+ARG INSTALL_PHP_GD=true
+RUN if [ ${INSTALL_PHP_GD} = true ]; then \
+    docker-php-ext-configure gd \
+        --enable-gd-native-ttf \
+        --with-jpeg-dir=/usr/lib \
+        --with-freetype-dir=/usr/include/freetype2 && \
+    docker-php-ext-install gd \
+;fi
+
+# Install Memcached
+ARG INSTALL_MEMCACHED=true
+RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
+    curl -L -o /tmp/memcached.tar.gz "https://github.com/php-memcached-dev/php-memcached/archive/php7.tar.gz" \
+    && mkdir -p memcached \
+    && tar -C memcached -zxvf /tmp/memcached.tar.gz --strip 1 \
     && ( \
-        phpize \
+        cd memcached \
+        && phpize \
         && ./configure \
-        && make \
-        && make install ) \
-    && docker-php-ext-enable memcached \
+        && make -j$(nproc) \
+        && make install \
+    ) \
+    && rm -r memcached \
     && rm /tmp/memcached.tar.gz \
-    && rm -r /tmp/memcached
+    && docker-php-ext-enable memcached \
+;fi
 
-# Install Redis for PHP
-RUN curl -L -o /tmp/redis.tar.gz "https://github.com/phpredis/phpredis/archive/3.0.0.tar.gz" \
-    && mkdir -p /tmp/redis \
-    && tar -C /tmp/redis -zxvf /tmp/redis.tar.gz --strip 1 \
-    && cd /tmp/redis \
-    && ( \
-        phpize \
-        && ./configure \
-        && make \
-        && make install ) \
-    && docker-php-ext-enable redis \
-    && rm /tmp/redis.tar.gz \
-    && rm -r /tmp/redis
+ARG INSTALL_REDIS=true
+RUN if [ ${INSTALL_REDIS} = true ]; then \
+    pecl install redis && \
+    docker-php-ext-enable redis \
+;fi
 
-# Install xdebug
-RUN pecl install xdebug \
-    && docker-php-ext-enable xdebug
+ARG INSTALL_OPCACHE=true
+RUN if [ ${INSTALL_OPCACHE} = true ]; then \
+    docker-php-ext-install opcache && \
+    docker-php-ext-enable opcache \
+;fi
 
-# Install mongodb driver
-RUN pecl install mongodb
+# Install Zip
+ARG INSTALL_ZIP=true
+RUN if [ ${INSTALL_ZIP} = true ]; then \
+    pecl install zip && \
+    docker-php-ext-enable zip \
+;fi
 
-#####################################
-# Phalcon 3.0.0
-#####################################
+# Install Xdebug
+ARG INSTALL_XDEBUG=true
+RUN if [ ${INSTALL_XDEBUG} = true ]; then \
+    pecl install xdebug && \
+    docker-php-ext-enable xdebug \
+;fi
 
+# Install MongoDB
+ARG INSTALL_MONGODB=true
+RUN if [ ${INSTALL_MONGODB} = true ]; then \
+    pecl install mongodb && \
+    docker-php-ext-enable mongodb \
+;fi
+
+# Install Phalcon
 RUN git clone --depth=1 http://github.com/phalcon/cphalcon -b master /tmp/phalcon \
    && ( \
    cd /tmp/phalcon/build \
    && ./install ) \
    && docker-php-ext-enable phalcon \
    && rm -rf /tmp/phalcon
+
+# Finalize
+ADD ./custom.ini /usr/local/etc/php/conf.d
+ADD ./custom.pool.conf /usr/local/etc/php-fpm.d/
+
+RUN rm -r /var/lib/apt/lists/*
 
 RUN usermod -u 1000 www-data
 
