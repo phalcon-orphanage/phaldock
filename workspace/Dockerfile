@@ -80,4 +80,4 @@ RUN . ~/.bashrc
 # Clean up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR /var/www/phalcon
+WORKDIR /var/www

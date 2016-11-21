@@ -65,7 +65,7 @@ RUN git clone --depth=1 http://github.com/phalcon/cphalcon -b master /tmp/phalco
 
 RUN usermod -u 1000 www-data
 
-WORKDIR /var/www/phalcon
+WORKDIR /var/www
 
 CMD ["php-fpm"]
 
