@@ -20,7 +20,8 @@ services:
     application:
         build: ./application
         volumes:
-            - ../:/var/www/phalcon
+            - ../:/var/www
+            # - ../sample:/var/www/sample
 
 ### Databases Data Container ################################
 

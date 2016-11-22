@@ -1,5 +1,5 @@
 FROM debian:jessie
 
-WORKDIR /var/www/phalcon
+WORKDIR /var/www
 
 CMD ["true"]

@@ -43,7 +43,7 @@ RUN curl -L -o /tmp/phalcon-v2.0.13.tar.gz "https://github.com/phalcon/cphalcon/
 
 RUN usermod -u 1000 www-data
 
-WORKDIR /var/www/phalcon
+WORKDIR /var/www
 
 CMD ["php-fpm"]
 

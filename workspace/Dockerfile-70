@@ -47,7 +47,7 @@ RUN if [ ${INSTALL_XDEBUG} = true ]; then \
     # Load the xdebug extension only with phpunit commands
     apt-get install -y --force-yes php7.0-xdebug && \
     sed -i 's/^/;/g' /etc/php/7.0/cli/conf.d/20-xdebug.ini && \
-    echo "alias phpunit='php -dzend_extension=xdebug.so /var/www/phalcon/vendor/bin/phpunit'" >> ~/.bashrc \
+    echo "alias phpunit='php -dzend_extension=xdebug.so /var/www/vendor/bin/phpunit'" >> ~/.bashrc \
 ;fi
 
 #####################################
@@ -78,7 +78,7 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
 # I had to split this condition link this because when I get it inside the above if statement is refuses to work!
 ENV if [ ${INSTALL_NODE} = true ]; then \
     # Set the ENV
-    NVM_DIR=/home/laradock/.nvm \
+    NVM_DIR=/home/phaldock/.nvm \
     # Install NodeJS with NVM
     RUN . ~/.nvm/nvm.sh && \
         nvm install stable && \
@@ -111,7 +111,7 @@ RUN groupadd -g $PGID phaldock && \
 
 # Install composer and add its bin to the PATH.
 RUN curl -s http://getcomposer.org/installer | php && \
-    echo "export PATH=${PATH}:/var/www/phalcon/vendor/bin" >> ~/.bashrc && \
+    echo "export PATH=${PATH}:/var/www/vendor/bin" >> ~/.bashrc && \
     mv composer.phar /usr/local/bin/composer
 
 # Source the bash
@@ -128,8 +128,8 @@ USER root
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Now switch to our laradock user for the rest of user setup
+# Now switch to our phaldock user for the rest of user setup
 USER phaldock
 
 # Set default work directory
-WORKDIR /var/www/phalcon
+WORKDIR /var/www

@@ -1,7 +1,7 @@
 FROM nginx:latest
 
 ADD nginx.conf /etc/nginx/
-ADD phalcon.conf /etc/nginx/sites-available/
+COPY sites/*.conf /etc/nginx/sites-available/
 
 RUN rm /etc/nginx/conf.d/default.conf
 RUN echo "upstream php-upstream { server php-fpm:9000; }" > /etc/nginx/conf.d/upstream.conf
