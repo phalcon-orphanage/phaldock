@@ -7,6 +7,14 @@ services:
     php-fpm:
         build:
             context: ./php-fpm
+            args:
+                - INSTALL_XDEBUG=false
+                - INSTALL_PHP_GD=false
+                - INSTALL_MONGODB=false
+                - INSTALL_ZIP=false
+                - INSTALL_MEMCACHED=false
+                - INSTALL_REDIS=false
+                - INSTALL_OPCACHE=false
             dockerfile: Dockerfile-70
         volumes_from:
             - application
